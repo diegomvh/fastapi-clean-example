@@ -18,7 +18,7 @@ dotenv: guard-APP_ENV
 	@$(PYTHON) $(TOML_CONFIG_MANAGER) $(APP_ENV)
 
 # Docker compose
-DOCKER_COMPOSE := docker compose
+DOCKER_COMPOSE := podman compose
 DOCKER_COMPOSE_PRUNE := scripts/makefile/docker_prune.sh
 
 .PHONY: up.db up.db-echo up up.echo down down.total logs.db shell.db prune
