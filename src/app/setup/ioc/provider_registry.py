@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 
 from dishka import Provider
+from dishka.integrations.starlette import StarletteProvider
 
 from app.setup.ioc.application import ApplicationProvider
 from app.setup.ioc.domain import DomainProvider
@@ -13,6 +14,7 @@ def get_providers() -> Iterable[Provider]:
     return (
         DomainProvider(),
         ApplicationProvider(),
+        StarletteProvider(),
         infrastructure_provider(),
         PresentationProvider(),
         SettingsProvider(),

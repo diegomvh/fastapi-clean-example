@@ -1,8 +1,8 @@
 # PostgreSQL
 [postgres]
 DB = "web_app_db_pg"
-HOST = "localhost"
-PORT = 5432
+HOST = "mdprwn1.juschubut.local"
+PORT = 31432
 DRIVER = "psycopg"
 
 # Uvicorn
