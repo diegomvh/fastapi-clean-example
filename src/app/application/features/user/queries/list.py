@@ -1,6 +1,9 @@
 import logging
 from dataclasses import dataclass
-from typing import TypedDict
+
+from diator.events import Event
+from diator.requests import Request, RequestHandler
+from diator.response import Response
 
 from app.application.common.exceptions.query import SortingError
 from app.application.common.ports.user_query_gateway import UserQueryGateway
@@ -24,24 +27,32 @@ from app.domain.enums.user_role import UserRole
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class ListUsersRequest:
+@dataclass(frozen=True, kw_only=True)
+class ListUsersQueryRequest(Request):
+    """
+    - Open to admins.
+    - Retrieves a paginated list of existing users with relevant information.
+    """
+
     limit: int
     offset: int
     sorting_field: str
     sorting_order: SortingOrder
 
 
-class ListUsersResponse(TypedDict):
-    users: list[UserQueryModel]
-
-
-class ListUsersQueryService:
+@dataclass(frozen=True, kw_only=True)
+class ListUsersQueryResponse(Response):
     """
     - Open to admins.
     - Retrieves a paginated list of existing users with relevant information.
     """
 
+    users: list[UserQueryModel]
+
+
+class ListUsersQueryHandler(
+    RequestHandler[ListUsersQueryRequest, ListUsersQueryResponse]
+):
     def __init__(
         self,
         current_user_service: CurrentUserService,
@@ -49,8 +60,13 @@ class ListUsersQueryService:
     ):
         self._current_user_service = current_user_service
         self._user_query_gateway = user_query_gateway
+        self._events: list[Event] = []
 
-    async def execute(self, request_data: ListUsersRequest) -> ListUsersResponse:
+    @property
+    def events(self) -> list[Event]:
+        return self._events
+
+    async def handle(self, req: ListUsersQueryRequest) -> ListUsersQueryResponse:
         """
         :raises AuthenticationError:
         :raises DataMapperError:
@@ -74,12 +90,12 @@ class ListUsersQueryService:
         log.debug("Retrieving list of users.")
         user_list_params = UserListParams(
             pagination=Pagination(
-                limit=request_data.limit,
-                offset=request_data.offset,
+                limit=req.limit,
+                offset=req.offset,
             ),
             sorting=UserListSorting(
-                sorting_field=request_data.sorting_field,
-                sorting_order=request_data.sorting_order,
+                sorting_field=req.sorting_field,
+                sorting_order=req.sorting_order,
             ),
         )
 
@@ -89,11 +105,11 @@ class ListUsersQueryService:
         if users is None:
             log.error(
                 "Retrieving list of users failed: invalid sorting column '%s'.",
-                request_data.sorting_field,
+                req.sorting_field,
             )
             raise SortingError("Invalid sorting field.")
 
-        response = ListUsersResponse(users=users)
+        response = ListUsersQueryResponse(users=users)
 
         log.info("List users: done.")
         return response

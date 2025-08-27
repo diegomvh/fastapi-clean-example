@@ -8,13 +8,13 @@ from app.application.common.services.current_user import CurrentUserService
 
 
 @dataclass(frozen=True, kw_only=True)
-class JoinMeetingCommand(Request):
+class JoinMeetingCommandRequest(Request):
     meeting_id: int
     user_id: int
     is_late: bool = field(default=False)
 
 
-class JoinMeetingCommandHandler(RequestHandler[JoinMeetingCommand, None]):
+class JoinMeetingCommandHandler(RequestHandler[JoinMeetingCommandRequest, None]):
     def __init__(
         self,
         current_user_service: CurrentUserService,
@@ -28,5 +28,5 @@ class JoinMeetingCommandHandler(RequestHandler[JoinMeetingCommand, None]):
     def events(self) -> list[Event]:
         return self._events
 
-    async def handle(self, request: JoinMeetingCommand) -> None:
+    async def handle(self, request: JoinMeetingCommandRequest) -> None:
         pass

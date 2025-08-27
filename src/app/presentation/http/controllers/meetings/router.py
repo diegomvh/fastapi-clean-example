@@ -1,13 +1,15 @@
 from inspect import getdoc
 from typing import Annotated
 
+from diator.mediator import Mediator
+from dishka import FromDishka
 from dishka.integrations.fastapi import inject
-from fastapi import APIRouter, Path, Request, Security, status
+from fastapi import APIRouter, Path, Security, status
 from fastapi_error_map import ErrorAwareRouter, rule
 
 from app.application.common.exceptions.authorization import AuthorizationError
 from app.application.features.meeting.commands.join import (
-    JoinMeetingCommand,
+    JoinMeetingCommandRequest,
 )
 from app.domain.exceptions.base import DomainFieldError
 from app.domain.exceptions.user import (
@@ -26,7 +28,7 @@ def create_join_router() -> APIRouter:
 
     @router.get(
         "/{meeting_id}/{user_id}/join",
-        description=getdoc(JoinMeetingCommand),
+        description=getdoc(JoinMeetingCommandRequest),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -47,10 +49,10 @@ def create_join_router() -> APIRouter:
     async def join_meeting(
         meeting_id: Annotated[int, Path()],
         user_id: Annotated[int, Path()],
-        request: Request,
+        mediator: FromDishka[Mediator],
     ) -> None:
-        command = JoinMeetingCommand(meeting_id=meeting_id, user_id=user_id)
-        await request.app.state.mediator.send(command)
+        command = JoinMeetingCommandRequest(meeting_id=meeting_id, user_id=user_id)
+        await mediator.send(command)
 
     return router
 

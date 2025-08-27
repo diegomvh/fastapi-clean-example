@@ -1,6 +1,7 @@
 from inspect import getdoc
-from typing import Annotated
+from typing import Annotated, cast
 
+from diator.mediator import Mediator
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Depends, Security, status
@@ -10,10 +11,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.application.common.exceptions.authorization import AuthorizationError
 from app.application.common.exceptions.query import PaginationError, SortingError
 from app.application.common.query_params.sorting import SortingOrder
-from app.application.queries.list_users import (
-    ListUsersQueryService,
-    ListUsersRequest,
-    ListUsersResponse,
+from app.application.features.user.queries.list import (
+    ListUsersQueryRequest,
+    ListUsersQueryResponse,
 )
 from app.infrastructure.auth.exceptions import AuthenticationError
 from app.infrastructure.exceptions.gateway import DataMapperError, ReaderError
@@ -43,7 +43,7 @@ def create_list_users_router() -> APIRouter:
 
     @router.get(
         "/",
-        description=getdoc(ListUsersQueryService),
+        description=getdoc(ListUsersQueryRequest),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -67,14 +67,14 @@ def create_list_users_router() -> APIRouter:
     @inject
     async def list_users(
         request_data_pydantic: Annotated[ListUsersRequestPydantic, Depends()],
-        interactor: FromDishka[ListUsersQueryService],
-    ) -> ListUsersResponse:
-        request_data = ListUsersRequest(
+        mediator: FromDishka[Mediator],
+    ) -> ListUsersQueryResponse:
+        query = ListUsersQueryRequest(
             limit=request_data_pydantic.limit,
             offset=request_data_pydantic.offset,
             sorting_field=request_data_pydantic.sorting_field,
             sorting_order=request_data_pydantic.sorting_order,
         )
-        return await interactor.execute(request_data)
+        return cast(ListUsersQueryResponse, await mediator.send(query))
 
     return router

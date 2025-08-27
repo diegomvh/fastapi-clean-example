@@ -29,6 +29,9 @@ from app.infrastructure.auth.session.ports.transaction_manager import (
 from app.infrastructure.auth.session.ports.transport import AuthSessionTransport
 from app.infrastructure.auth.session.service import AuthSessionService
 from app.infrastructure.auth.session.timer_utc import UtcAuthSessionTimer
+from app.infrastructure.diator.provider import (
+    get_mediator,
+)
 from app.infrastructure.persistence_sqla.provider import (
     get_async_engine,
     get_async_session_factory,
@@ -93,6 +96,10 @@ def infrastructure_provider() -> InfrastructureProvider:
     provider.provide(
         source=get_async_session_factory,
         scope=Scope.APP,
+    )
+    provider.provide(
+        source=get_mediator,
+        scope=Scope.REQUEST,
     )
     provider.provide(
         source=get_main_async_session,

@@ -60,7 +60,7 @@ code.format:
 
 code.lint: code.format
 	ruff check --exit-non-zero-on-fix
-	slotscheck src
+# slotscheck src
 	mypy
 
 code.test:

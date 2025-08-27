@@ -7,7 +7,6 @@ from app.setup.app_factory import configure_app, create_app, create_async_ioc_co
 from app.setup.config.logs import configure_logging
 from app.setup.config.settings import AppSettings, load_settings
 from app.setup.ioc.provider_registry import get_providers
-from app.setup.mediator import setup_mediator
 
 
 def make_app(
@@ -28,7 +27,6 @@ def make_app(
         settings=settings,
     )
     setup_dishka(container=async_ioc_container, app=app)
-    setup_mediator(container=async_ioc_container, settings=settings, app=app)
 
     return app
 

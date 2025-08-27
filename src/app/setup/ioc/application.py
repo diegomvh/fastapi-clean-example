@@ -16,7 +16,7 @@ from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.ports.user_query_gateway import UserQueryGateway
 from app.application.common.services.current_user import CurrentUserService
 from app.application.features.meeting.commands.join import JoinMeetingCommandHandler
-from app.application.queries.list_users import ListUsersQueryService
+from app.application.features.user.queries.list import ListUsersQueryHandler
 from app.infrastructure.adapters.main_flusher_sqla import SqlaMainFlusher
 from app.infrastructure.adapters.main_transaction_manager_sqla import (
     SqlaMainTransactionManager,
@@ -81,6 +81,6 @@ class ApplicationProvider(Provider):
     )
 
     # Queries
-    query_services = provide_all(
-        ListUsersQueryService,
+    queries = provide_all(
+        ListUsersQueryHandler,
     )
