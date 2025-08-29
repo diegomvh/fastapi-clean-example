@@ -8,7 +8,7 @@ from diator.middlewares import MiddlewareChain
 from diator.requests import RequestMap
 
 # from diator.message_brokers.redis import RedisMessageBroker  # noqa: ERA001
-from fastapi import Request
+from dishka import AsyncContainer
 
 from app.application.features.meeting.commands.join import (
     JoinMeetingCommandHandler,
@@ -25,11 +25,11 @@ log = logging.getLogger(__name__)
 
 
 def get_mediator(
-    request: Request,
+    container: AsyncContainer,
     settings: AppSettings,  # noqa: ARG001
 ) -> Mediator:
     dishka = DishkaContainer()
-    dishka.attach_external_request(request)
+    dishka.attach_external_container(container)
 
     # Middlewares
     m_chain = MiddlewareChain()

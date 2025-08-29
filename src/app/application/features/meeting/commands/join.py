@@ -7,8 +7,8 @@ from app.application.common.ports.user_query_gateway import UserQueryGateway
 from app.application.common.services.current_user import CurrentUserService
 
 
-@dataclass(frozen=True, kw_only=True)
-class JoinMeetingCommandRequest(Request):
+@dataclass(kw_only=True)
+class JoinMeetingCommandRequest(Request[None]):
     meeting_id: int
     user_id: int
     is_late: bool = field(default=False)

@@ -1,5 +1,5 @@
 from inspect import getdoc
-from typing import Annotated, cast
+from typing import Annotated
 
 from diator.mediator import Mediator
 from dishka import FromDishka
@@ -75,6 +75,6 @@ def create_list_users_router() -> APIRouter:
             sorting_field=request_data_pydantic.sorting_field,
             sorting_order=request_data_pydantic.sorting_order,
         )
-        return cast(ListUsersQueryResponse, await mediator.send(query))
+        return await mediator.send(query)
 
     return router

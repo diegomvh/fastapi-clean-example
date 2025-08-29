@@ -27,8 +27,18 @@ from app.domain.enums.user_role import UserRole
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, kw_only=True)
-class ListUsersQueryRequest(Request):
+@dataclass(kw_only=True)
+class ListUsersQueryResponse(Response):
+    """
+    - Open to admins.
+    - Retrieves a paginated list of existing users with relevant information.
+    """
+
+    users: list[UserQueryModel]
+
+
+@dataclass(kw_only=True)
+class ListUsersQueryRequest(Request[ListUsersQueryResponse]):
     """
     - Open to admins.
     - Retrieves a paginated list of existing users with relevant information.
@@ -38,16 +48,6 @@ class ListUsersQueryRequest(Request):
     offset: int
     sorting_field: str
     sorting_order: SortingOrder
-
-
-@dataclass(frozen=True, kw_only=True)
-class ListUsersQueryResponse(Response):
-    """
-    - Open to admins.
-    - Retrieves a paginated list of existing users with relevant information.
-    """
-
-    users: list[UserQueryModel]
 
 
 class ListUsersQueryHandler(
