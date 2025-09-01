@@ -1,41 +1,41 @@
 import logging
 from dataclasses import dataclass
 
-from app.application.common.ports.transaction_manager import (
-    TransactionManager,
-)
+from diator.requests import Request, RequestHandler
+
+from app.application.common.ports.transaction_manager import TransactionManager
 from app.application.common.ports.user_command_gateway import UserCommandGateway
-from app.application.common.services.authorization.authorize import (
-    authorize,
-)
+from app.application.common.services.authorization.authorize import authorize
+from app.application.common.services.authorization.composite import AnyOf
 from app.application.common.services.authorization.permissions import (
-    CanManageRole,
+    CanManageSelf,
     CanManageSubordinate,
-    RoleManagementContext,
     UserManagementContext,
 )
 from app.application.common.services.current_user import CurrentUserService
 from app.domain.entities.user import User
-from app.domain.enums.user_role import UserRole
 from app.domain.exceptions.user import UserNotFoundByUsernameError
 from app.domain.services.user import UserService
+from app.domain.value_objects.raw_password.raw_password import RawPassword
 from app.domain.value_objects.username.username import Username
 
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
-class ActivateUserRequest:
+@dataclass(kw_only=True)
+class ChangePasswordCommand(Request[None]):
+    """
+    - Open to authenticated users.
+    - Changes the user's password.
+    - The current user can change their own password.
+    - Admins can change passwords of subordinate users.
+    """
+
     username: str
+    password: str
 
 
-class ActivateUserInteractor:
-    """
-    - Open to admins.
-    - Restores a previously soft-deleted user.
-    - Only super admins can activate other admins.
-    """
-
+class ChangePasswordCommandHandler(RequestHandler[ChangePasswordCommand, None]):
     def __init__(
         self,
         current_user_service: CurrentUserService,
@@ -43,36 +43,26 @@ class ActivateUserInteractor:
         user_service: UserService,
         transaction_manager: TransactionManager,
     ):
+        super().__init__()
         self._current_user_service = current_user_service
         self._user_command_gateway = user_command_gateway
         self._user_service = user_service
         self._transaction_manager = transaction_manager
 
-    async def execute(self, request_data: ActivateUserRequest) -> None:
+    async def handle(self, request_data: ChangePasswordCommand) -> None:
         """
         :raises AuthenticationError:
         :raises DataMapperError:
         :raises AuthorizationError:
         :raises DomainFieldError:
         :raises UserNotFoundByUsernameError:
-        :raises ActivationChangeNotPermittedError:
         """
-        log.info(
-            "Activate user: started. Username: '%s'.",
-            request_data.username,
-        )
+        log.info("Change password: started.")
 
         current_user = await self._current_user_service.get_current_user()
 
-        authorize(
-            CanManageRole(),
-            context=RoleManagementContext(
-                subject=current_user,
-                target_role=UserRole.USER,
-            ),
-        )
-
         username = Username(request_data.username)
+        password = RawPassword(request_data.password)
         user: User | None = await self._user_command_gateway.read_by_username(
             username,
             for_update=True,
@@ -81,17 +71,17 @@ class ActivateUserInteractor:
             raise UserNotFoundByUsernameError(username)
 
         authorize(
-            CanManageSubordinate(),
+            AnyOf(
+                CanManageSelf(),
+                CanManageSubordinate(),
+            ),
             context=UserManagementContext(
                 subject=current_user,
                 target=user,
             ),
         )
 
-        self._user_service.toggle_user_activation(user, is_active=True)
+        self._user_service.change_password(user, password)
         await self._transaction_manager.commit()
 
-        log.info(
-            "Activate user: done. Username: '%s'.",
-            user.username.value,
-        )
+        log.info("Change password: done.")

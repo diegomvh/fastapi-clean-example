@@ -1,6 +1,9 @@
 import logging
 from dataclasses import dataclass
 
+from diator.requests import Request, RequestHandler
+
+from app.application.common.ports.access_revoker import AccessRevoker
 from app.application.common.ports.transaction_manager import (
     TransactionManager,
 )
@@ -10,7 +13,9 @@ from app.application.common.services.authorization.authorize import (
 )
 from app.application.common.services.authorization.permissions import (
     CanManageRole,
+    CanManageSubordinate,
     RoleManagementContext,
+    UserManagementContext,
 )
 from app.application.common.services.current_user import CurrentUserService
 from app.domain.entities.user import User
@@ -22,41 +27,46 @@ from app.domain.value_objects.username.username import Username
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
-class GrantAdminRequest:
+@dataclass(kw_only=True)
+class DeactivateUserCommand(Request[None]):
+    """
+    - Open to admins.
+    - Soft-deletes an existing user, making that user inactive.
+    - Also deletes the user's sessions.
+    - Only super admins can deactivate other admins.
+    - Super admins cannot be soft-deleted.
+    """
+
     username: str
 
 
-class GrantAdminInteractor:
-    """
-    - Open to super admins.
-    - Grants admin rights to a specified user.
-    - Super admin rights can not be changed.
-    """
-
+class DeactivateUserCommandHandler(RequestHandler[DeactivateUserCommand, None]):
     def __init__(
         self,
         current_user_service: CurrentUserService,
         user_command_gateway: UserCommandGateway,
         user_service: UserService,
         transaction_manager: TransactionManager,
+        access_revoker: AccessRevoker,
     ):
+        super().__init__()
         self._current_user_service = current_user_service
         self._user_command_gateway = user_command_gateway
         self._user_service = user_service
         self._transaction_manager = transaction_manager
+        self._access_revoker = access_revoker
 
-    async def execute(self, request_data: GrantAdminRequest) -> None:
+    async def handle(self, request_data: DeactivateUserCommand) -> None:
         """
         :raises AuthenticationError:
         :raises DataMapperError:
         :raises AuthorizationError:
         :raises DomainFieldError:
         :raises UserNotFoundByUsernameError:
-        :raises RoleChangeNotPermittedError:
+        :raises ActivationChangeNotPermittedError:
         """
         log.info(
-            "Grant admin: started. Username: '%s'.",
+            "Deactivate user: started. Username: '%s'.",
             request_data.username,
         )
 
@@ -66,7 +76,7 @@ class GrantAdminInteractor:
             CanManageRole(),
             context=RoleManagementContext(
                 subject=current_user,
-                target_role=UserRole.ADMIN,
+                target_role=UserRole.USER,
             ),
         )
 
@@ -78,7 +88,19 @@ class GrantAdminInteractor:
         if user is None:
             raise UserNotFoundByUsernameError(username)
 
-        self._user_service.toggle_user_admin_role(user, is_admin=True)
-        await self._transaction_manager.commit()
+        authorize(
+            CanManageSubordinate(),
+            context=UserManagementContext(
+                subject=current_user,
+                target=user,
+            ),
+        )
 
-        log.info("Grant admin: done. Username: '%s'.", user.username.value)
+        self._user_service.toggle_user_activation(user, is_active=False)
+        await self._transaction_manager.commit()
+        await self._access_revoker.remove_all_user_access(user.id_)
+
+        log.info(
+            "Deactivate user: done. Username: '%s'.",
+            user.username.value,
+        )

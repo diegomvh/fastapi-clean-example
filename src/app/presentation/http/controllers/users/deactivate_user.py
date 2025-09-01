@@ -1,16 +1,14 @@
 from inspect import getdoc
 from typing import Annotated
 
+from diator.mediator import Mediator
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Path, Security, status
 from fastapi_error_map import ErrorAwareRouter, rule
 
-from app.application.commands.deactivate_user import (
-    DeactivateUserInteractor,
-    DeactivateUserRequest,
-)
 from app.application.common.exceptions.authorization import AuthorizationError
+from app.application.features.user.commands.deactivate import DeactivateUserCommand
 from app.domain.exceptions.base import DomainFieldError
 from app.domain.exceptions.user import (
     ActivationChangeNotPermittedError,
@@ -30,7 +28,7 @@ def create_deactivate_user_router() -> APIRouter:
 
     @router.patch(
         "/{username}/deactivate",
-        description=getdoc(DeactivateUserInteractor),
+        description=getdoc(DeactivateUserCommand),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -50,9 +48,9 @@ def create_deactivate_user_router() -> APIRouter:
     @inject
     async def deactivate_user(
         username: Annotated[str, Path()],
-        interactor: FromDishka[DeactivateUserInteractor],
+        mediator: FromDishka[Mediator],
     ) -> None:
-        request_data = DeactivateUserRequest(username)
-        await interactor.execute(request_data)
+        command = DeactivateUserCommand(username=username)
+        await mediator.send(command)
 
     return router

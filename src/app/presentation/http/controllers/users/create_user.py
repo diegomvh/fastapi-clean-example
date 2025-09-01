@@ -1,17 +1,17 @@
 from inspect import getdoc
 
+from diator.mediator import Mediator
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Security, status
 from fastapi_error_map import ErrorAwareRouter, rule
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.application.commands.create_user import (
-    CreateUserInteractor,
-    CreateUserRequest,
-    CreateUserResponse,
-)
 from app.application.common.exceptions.authorization import AuthorizationError
+from app.application.features.user.commands.create import (
+    CreateUserCommand,
+    CreateUserCommandResult,
+)
 from app.domain.enums.user_role import UserRole
 from app.domain.exceptions.base import DomainFieldError
 from app.domain.exceptions.user import (
@@ -45,7 +45,7 @@ def create_create_user_router() -> APIRouter:
 
     @router.post(
         "/",
-        description=getdoc(CreateUserInteractor),
+        description=getdoc(CreateUserCommand),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -65,13 +65,13 @@ def create_create_user_router() -> APIRouter:
     @inject
     async def create_user(
         request_data_pydantic: CreateUserRequestPydantic,
-        interactor: FromDishka[CreateUserInteractor],
-    ) -> CreateUserResponse:
-        request_data = CreateUserRequest(
+        mediator: FromDishka[Mediator],
+    ) -> CreateUserCommandResult:
+        command = CreateUserCommand(
             username=request_data_pydantic.username,
             password=request_data_pydantic.password,
             role=request_data_pydantic.role,
         )
-        return await interactor.execute(request_data)
+        return await mediator.send(command)
 
     return router

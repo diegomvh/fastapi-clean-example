@@ -1,16 +1,14 @@
 from inspect import getdoc
 from typing import Annotated
 
+from diator.mediator import Mediator
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Path, Security, status
 from fastapi_error_map import ErrorAwareRouter, rule
 
-from app.application.commands.grant_admin import (
-    GrantAdminInteractor,
-    GrantAdminRequest,
-)
 from app.application.common.exceptions.authorization import AuthorizationError
+from app.application.features.user.commands.grant_admin import GrantAdminCommand
 from app.domain.exceptions.base import DomainFieldError
 from app.domain.exceptions.user import (
     RoleChangeNotPermittedError,
@@ -30,7 +28,7 @@ def create_grant_admin_router() -> APIRouter:
 
     @router.patch(
         "/{username}/grant-admin",
-        description=getdoc(GrantAdminInteractor),
+        description=getdoc(GrantAdminCommand),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -50,9 +48,9 @@ def create_grant_admin_router() -> APIRouter:
     @inject
     async def grant_admin(
         username: Annotated[str, Path()],
-        interactor: FromDishka[GrantAdminInteractor],
+        mediator: FromDishka[Mediator],
     ) -> None:
-        request_data = GrantAdminRequest(username)
-        await interactor.execute(request_data)
+        command = GrantAdminCommand(username=username)
+        await mediator.send(command)
 
     return router

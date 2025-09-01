@@ -1,9 +1,9 @@
 import logging
 from dataclasses import dataclass
 
-from app.application.common.ports.transaction_manager import (
-    TransactionManager,
-)
+from diator.requests import Request, RequestHandler
+
+from app.application.common.ports.transaction_manager import TransactionManager
 from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.services.authorization.authorize import authorize
 from app.application.common.services.authorization.permissions import (
@@ -20,18 +20,18 @@ from app.domain.value_objects.username.username import Username
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
-class RevokeAdminRequest:
-    username: str
-
-
-class RevokeAdminInteractor:
+@dataclass(kw_only=True)
+class RevokeAdminCommand(Request[None]):
     """
     - Open to super admins.
     - Revokes admin rights from a specified user.
     - Super admin rights can not be changed
     """
 
+    username: str
+
+
+class RevokeAdminCommandHandler(RequestHandler[RevokeAdminCommand, None]):
     def __init__(
         self,
         current_user_service: CurrentUserService,
@@ -39,12 +39,13 @@ class RevokeAdminInteractor:
         user_service: UserService,
         transaction_manager: TransactionManager,
     ):
+        super().__init__()
         self._current_user_service = current_user_service
         self._user_command_gateway = user_command_gateway
         self._user_service = user_service
         self._transaction_manager = transaction_manager
 
-    async def execute(self, request_data: RevokeAdminRequest) -> None:
+    async def handle(self, request_data: RevokeAdminCommand) -> None:
         """
         :raises AuthenticationError:
         :raises DataMapperError:

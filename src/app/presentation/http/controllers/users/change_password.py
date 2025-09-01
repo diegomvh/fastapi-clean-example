@@ -1,16 +1,17 @@
 from inspect import getdoc
 from typing import Annotated
 
+from diator.mediator import Mediator
 from dishka import FromDishka
 from dishka.integrations.fastapi import inject
 from fastapi import APIRouter, Body, Path, Security, status
 from fastapi_error_map import ErrorAwareRouter, rule
 
-from app.application.commands.change_password import (
-    ChangePasswordInteractor,
-    ChangePasswordRequest,
-)
 from app.application.common.exceptions.authorization import AuthorizationError
+from app.application.features.user.commands.change_password import (
+    ChangePasswordCommand,
+    ChangePasswordCommandHandler,
+)
 from app.domain.exceptions.base import DomainFieldError
 from app.domain.exceptions.user import UserNotFoundByUsernameError
 from app.infrastructure.auth.exceptions import AuthenticationError
@@ -27,7 +28,7 @@ def create_change_password_router() -> APIRouter:
 
     @router.patch(
         "/{username}/password",
-        description=getdoc(ChangePasswordInteractor),
+        description=getdoc(ChangePasswordCommandHandler),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -47,12 +48,12 @@ def create_change_password_router() -> APIRouter:
     async def change_password(
         username: Annotated[str, Path()],
         password: Annotated[str, Body()],
-        interactor: FromDishka[ChangePasswordInteractor],
+        mediator: FromDishka[Mediator],
     ) -> None:
-        request_data = ChangePasswordRequest(
+        command = ChangePasswordCommand(
             username=username,
             password=password,
         )
-        await interactor.execute(request_data)
+        await mediator.send(command)
 
     return router

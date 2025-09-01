@@ -1,9 +1,8 @@
 import logging
 from dataclasses import dataclass
 
-from diator.events import Event
 from diator.requests import Request, RequestHandler
-from diator.response import Response
+from diator.responses import Response
 
 from app.application.common.exceptions.query import SortingError
 from app.application.common.ports.user_query_gateway import UserQueryGateway
@@ -28,7 +27,7 @@ log = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True)
-class ListUsersQueryResponse(Response):
+class ListUsersQueryResult(Response):
     """
     - Open to admins.
     - Retrieves a paginated list of existing users with relevant information.
@@ -38,7 +37,7 @@ class ListUsersQueryResponse(Response):
 
 
 @dataclass(kw_only=True)
-class ListUsersQueryRequest(Request[ListUsersQueryResponse]):
+class ListUsersQuery(Request[ListUsersQueryResult]):
     """
     - Open to admins.
     - Retrieves a paginated list of existing users with relevant information.
@@ -50,23 +49,17 @@ class ListUsersQueryRequest(Request[ListUsersQueryResponse]):
     sorting_order: SortingOrder
 
 
-class ListUsersQueryHandler(
-    RequestHandler[ListUsersQueryRequest, ListUsersQueryResponse]
-):
+class ListUsersQueryHandler(RequestHandler[ListUsersQuery, ListUsersQueryResult]):
     def __init__(
         self,
         current_user_service: CurrentUserService,
         user_query_gateway: UserQueryGateway,
     ):
+        super().__init__()
         self._current_user_service = current_user_service
         self._user_query_gateway = user_query_gateway
-        self._events: list[Event] = []
 
-    @property
-    def events(self) -> list[Event]:
-        return self._events
-
-    async def handle(self, req: ListUsersQueryRequest) -> ListUsersQueryResponse:
+    async def handle(self, req: ListUsersQuery) -> ListUsersQueryResult:
         """
         :raises AuthenticationError:
         :raises DataMapperError:
@@ -109,7 +102,7 @@ class ListUsersQueryHandler(
             )
             raise SortingError("Invalid sorting field.")
 
-        response = ListUsersQueryResponse(users=users)
+        response = ListUsersQueryResult(users=users)
 
         log.info("List users: done.")
         return response

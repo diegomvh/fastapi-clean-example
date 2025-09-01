@@ -1,7 +1,8 @@
 import logging
 from dataclasses import dataclass
 
-from app.application.common.ports.access_revoker import AccessRevoker
+from diator.requests import Request, RequestHandler
+
 from app.application.common.ports.transaction_manager import (
     TransactionManager,
 )
@@ -25,35 +26,32 @@ from app.domain.value_objects.username.username import Username
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True)
-class DeactivateUserRequest:
+@dataclass(kw_only=True)
+class ActivateUserCommand(Request[None]):
+    """
+    - Open to admins.
+    - Restores a previously soft-deleted user.
+    - Only super admins can activate other admins.
+    """
+
     username: str
 
 
-class DeactivateUserInteractor:
-    """
-    - Open to admins.
-    - Soft-deletes an existing user, making that user inactive.
-    - Also deletes the user's sessions.
-    - Only super admins can deactivate other admins.
-    - Super admins cannot be soft-deleted.
-    """
-
+class ActivateUserCommandHandler(RequestHandler[ActivateUserCommand, None]):
     def __init__(
         self,
         current_user_service: CurrentUserService,
         user_command_gateway: UserCommandGateway,
         user_service: UserService,
         transaction_manager: TransactionManager,
-        access_revoker: AccessRevoker,
     ):
+        super().__init__()
         self._current_user_service = current_user_service
         self._user_command_gateway = user_command_gateway
         self._user_service = user_service
         self._transaction_manager = transaction_manager
-        self._access_revoker = access_revoker
 
-    async def execute(self, request_data: DeactivateUserRequest) -> None:
+    async def handle(self, request_data: ActivateUserCommand) -> None:
         """
         :raises AuthenticationError:
         :raises DataMapperError:
@@ -63,7 +61,7 @@ class DeactivateUserInteractor:
         :raises ActivationChangeNotPermittedError:
         """
         log.info(
-            "Deactivate user: started. Username: '%s'.",
+            "Activate user: started. Username: '%s'.",
             request_data.username,
         )
 
@@ -93,11 +91,10 @@ class DeactivateUserInteractor:
             ),
         )
 
-        self._user_service.toggle_user_activation(user, is_active=False)
+        self._user_service.toggle_user_activation(user, is_active=True)
         await self._transaction_manager.commit()
-        await self._access_revoker.remove_all_user_access(user.id_)
 
         log.info(
-            "Deactivate user: done. Username: '%s'.",
+            "Activate user: done. Username: '%s'.",
             user.username.value,
         )

@@ -1,7 +1,9 @@
 import logging
 from dataclasses import dataclass
-from typing import TypedDict
 from uuid import UUID
+
+from diator.requests import Request, RequestHandler
+from diator.responses import Response
 
 from app.application.common.ports.flusher import Flusher
 from app.application.common.ports.transaction_manager import (
@@ -25,24 +27,27 @@ from app.domain.value_objects.username.username import Username
 log = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class CreateUserRequest:
-    username: str
-    password: str
-    role: UserRole
-
-
-class CreateUserResponse(TypedDict):
+@dataclass(kw_only=True)
+class CreateUserCommandResult(Response):
     id: UUID
 
 
-class CreateUserInteractor:
+@dataclass(kw_only=True)
+class CreateUserCommand(Request[CreateUserCommandResult]):
     """
     - Open to admins.
     - Creates a new user, including admins, if the username is unique.
     - Only super admins can create new admins.
     """
 
+    username: str
+    password: str
+    role: UserRole
+
+
+class CreateUserCommandHandler(
+    RequestHandler[CreateUserCommand, CreateUserCommandResult]
+):
     def __init__(
         self,
         current_user_service: CurrentUserService,
@@ -51,13 +56,14 @@ class CreateUserInteractor:
         flusher: Flusher,
         transaction_manager: TransactionManager,
     ):
+        super().__init__()
         self._current_user_service = current_user_service
         self._user_service = user_service
         self._user_command_gateway = user_command_gateway
         self._flusher = flusher
         self._transaction_manager = transaction_manager
 
-    async def execute(self, request_data: CreateUserRequest) -> CreateUserResponse:
+    async def handle(self, req: CreateUserCommand) -> CreateUserCommandResult:
         """
         :raises AuthenticationError:
         :raises DataMapperError:
@@ -68,7 +74,7 @@ class CreateUserInteractor:
         """
         log.info(
             "Create user: started. Username: '%s'.",
-            request_data.username,
+            req.username,
         )
 
         current_user = await self._current_user_service.get_current_user()
@@ -77,13 +83,13 @@ class CreateUserInteractor:
             CanManageRole(),
             context=RoleManagementContext(
                 subject=current_user,
-                target_role=request_data.role,
+                target_role=req.role,
             ),
         )
 
-        username = Username(request_data.username)
-        password = RawPassword(request_data.password)
-        user = self._user_service.create_user(username, password, request_data.role)
+        username = Username(req.username)
+        password = RawPassword(req.password)
+        user = self._user_service.create_user(username, password, req.role)
 
         self._user_command_gateway.add(user)
 
@@ -95,4 +101,4 @@ class CreateUserInteractor:
         await self._transaction_manager.commit()
 
         log.info("Create user: done. Username: '%s'.", user.username.value)
-        return CreateUserResponse(id=user.id_.value)
+        return CreateUserCommandResult(id=user.id_.value)

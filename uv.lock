@@ -230,14 +230,10 @@ wheels = [
 [[package]]
 name = "diator"
 version = "0.1.2"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/diegomvh/diator#f3aeb43841ee51ed8fbbbdc5fde6b69b12145368" }
 dependencies = [
     { name = "dataclass-factory" },
     { name = "orjson" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/43/b908d8bc852fa275e80e54d9883b35f4f6326d36b815e006f9edce394388/diator-0.1.2.tar.gz", hash = "sha256:da44cfec719fd7dc0b33eda7295ae31ad0afb379489778addb5c85eea0755d8f", size = 18143, upload-time = "2023-05-02T22:03:35.432Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/23/906766e984b53d3abe63c9ae2a2c6990269dcaa0a7be106c39226657b321/diator-0.1.2-py3-none-any.whl", hash = "sha256:2a252c4c2cb9963b9fb24dbc4e8c7b63f3bf880501505b07ef7bffb356ac3c09", size = 16544, upload-time = "2023-05-02T22:03:32.258Z" },
 ]
 
 [[package]]
@@ -337,7 +333,7 @@ requires-dist = [
     { name = "alembic-postgresql-enum", specifier = "==1.8.0" },
     { name = "bcrypt", specifier = "==4.3.0" },
     { name = "coverage", marker = "extra == 'test'", specifier = "==7.10.0" },
-    { name = "diator", specifier = ">=0.1.2" },
+    { name = "diator", git = "https://github.com/diegomvh/diator" },
     { name = "dishka", specifier = "==1.6.0" },
     { name = "fastapi", specifier = "==0.116.1" },
     { name = "fastapi-error-map", specifier = "==0.9.6" },

@@ -12,8 +12,8 @@ from app.application.common.exceptions.authorization import AuthorizationError
 from app.application.common.exceptions.query import PaginationError, SortingError
 from app.application.common.query_params.sorting import SortingOrder
 from app.application.features.user.queries.list import (
-    ListUsersQueryRequest,
-    ListUsersQueryResponse,
+    ListUsersQuery,
+    ListUsersQueryResult,
 )
 from app.infrastructure.auth.exceptions import AuthenticationError
 from app.infrastructure.exceptions.gateway import DataMapperError, ReaderError
@@ -43,7 +43,7 @@ def create_list_users_router() -> APIRouter:
 
     @router.get(
         "/",
-        description=getdoc(ListUsersQueryRequest),
+        description=getdoc(ListUsersQuery),
         error_map={
             AuthenticationError: status.HTTP_401_UNAUTHORIZED,
             DataMapperError: rule(
@@ -68,8 +68,8 @@ def create_list_users_router() -> APIRouter:
     async def list_users(
         request_data_pydantic: Annotated[ListUsersRequestPydantic, Depends()],
         mediator: FromDishka[Mediator],
-    ) -> ListUsersQueryResponse:
-        query = ListUsersQueryRequest(
+    ) -> ListUsersQueryResult:
+        query = ListUsersQuery(
             limit=request_data_pydantic.limit,
             offset=request_data_pydantic.offset,
             sorting_field=request_data_pydantic.sorting_field,

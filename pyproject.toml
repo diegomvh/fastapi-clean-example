@@ -34,7 +34,7 @@ dependencies = [
     "uuid6==2025.0.1",
     "uvicorn==0.35.0",
     "uvloop==0.21.0",
-    "diator>=0.1.2",
+    "diator",
 ]
 
 [project.optional-dependencies]
@@ -187,3 +187,6 @@ strict-imports = true
 exclude-modules = '''
 ^app\.infrastructure\.persistence_sqla\.alembic
 '''
+
+[tool.uv.sources]
+diator = { git = "https://github.com/diegomvh/diator" }
