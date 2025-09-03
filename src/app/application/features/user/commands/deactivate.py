@@ -4,9 +4,7 @@ from dataclasses import dataclass
 from diator.requests import Request, RequestHandler
 
 from app.application.common.ports.access_revoker import AccessRevoker
-from app.application.common.ports.transaction_manager import (
-    TransactionManager,
-)
+from app.application.common.ports.uow import AsyncBaseUnitOfWork
 from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.services.authorization.authorize import (
     authorize,
@@ -46,14 +44,14 @@ class DeactivateUserCommandHandler(RequestHandler[DeactivateUserCommand, None]):
         current_user_service: CurrentUserService,
         user_command_gateway: UserCommandGateway,
         user_service: UserService,
-        transaction_manager: TransactionManager,
+        uow: AsyncBaseUnitOfWork,
         access_revoker: AccessRevoker,
     ):
         super().__init__()
         self._current_user_service = current_user_service
         self._user_command_gateway = user_command_gateway
         self._user_service = user_service
-        self._transaction_manager = transaction_manager
+        self._uow = uow
         self._access_revoker = access_revoker
 
     async def handle(self, request_data: DeactivateUserCommand) -> None:
@@ -97,7 +95,7 @@ class DeactivateUserCommandHandler(RequestHandler[DeactivateUserCommand, None]):
         )
 
         self._user_service.toggle_user_activation(user, is_active=False)
-        await self._transaction_manager.commit()
+        await self._uow.commit()
         await self._access_revoker.remove_all_user_access(user.id_)
 
         log.info(

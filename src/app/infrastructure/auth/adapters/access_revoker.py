@@ -1,5 +1,5 @@
 from app.application.common.ports.access_revoker import AccessRevoker
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 from app.infrastructure.auth.session.service import AuthSessionService
 
 
@@ -10,7 +10,7 @@ class AuthSessionAccessRevoker(AccessRevoker):
     ):
         self._auth_session_service = auth_session_service
 
-    async def remove_all_user_access(self, user_id: UserId) -> None:
+    async def remove_all_user_access(self, user_id: EntityId) -> None:
         """
         :raises DataMapperError:
         """

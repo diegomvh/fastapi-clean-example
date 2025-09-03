@@ -5,6 +5,7 @@ from diator.requests import Request, RequestHandler
 from diator.responses import Response
 
 from app.application.common.exceptions.query import SortingError
+from app.application.common.ports.uow import AsyncBaseUnitOfWork
 from app.application.common.ports.user_query_gateway import UserQueryGateway
 from app.application.common.query_models.user import UserQueryModel
 from app.application.common.query_params.pagination import Pagination
@@ -21,6 +22,7 @@ from app.application.common.services.authorization.permissions import (
     RoleManagementContext,
 )
 from app.application.common.services.current_user import CurrentUserService
+from app.domain.entities.user import User
 from app.domain.enums.user_role import UserRole
 
 log = logging.getLogger(__name__)
@@ -54,10 +56,12 @@ class ListUsersQueryHandler(RequestHandler[ListUsersQuery, ListUsersQueryResult]
         self,
         current_user_service: CurrentUserService,
         user_query_gateway: UserQueryGateway,
+        uow: AsyncBaseUnitOfWork,
     ):
         super().__init__()
         self._current_user_service = current_user_service
         self._user_query_gateway = user_query_gateway
+        self._uow = uow
 
     async def handle(self, req: ListUsersQuery) -> ListUsersQueryResult:
         """
@@ -91,6 +95,10 @@ class ListUsersQueryHandler(RequestHandler[ListUsersQuery, ListUsersQueryResult]
                 sorting_order=req.sorting_order,
             ),
         )
+
+        user_repository = self._uow.repository(User)
+        all_users = await user_repository.find_all()
+        print(all_users)  # noqa: T201
 
         users: list[UserQueryModel] | None = await self._user_query_gateway.read_all(
             user_list_params,

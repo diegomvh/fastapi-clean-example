@@ -6,9 +6,7 @@ from diator.requests import Request, RequestHandler
 from diator.responses import Response
 
 from app.application.common.ports.flusher import Flusher
-from app.application.common.ports.transaction_manager import (
-    TransactionManager,
-)
+from app.application.common.ports.uow import AsyncBaseUnitOfWork
 from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.services.authorization.authorize import (
     authorize,
@@ -54,14 +52,14 @@ class CreateUserCommandHandler(
         user_service: UserService,
         user_command_gateway: UserCommandGateway,
         flusher: Flusher,
-        transaction_manager: TransactionManager,
+        uow: AsyncBaseUnitOfWork,
     ):
         super().__init__()
         self._current_user_service = current_user_service
         self._user_service = user_service
         self._user_command_gateway = user_command_gateway
         self._flusher = flusher
-        self._transaction_manager = transaction_manager
+        self._uow = uow
 
     async def handle(self, req: CreateUserCommand) -> CreateUserCommandResult:
         """
@@ -98,7 +96,7 @@ class CreateUserCommandHandler(
         except UsernameAlreadyExistsError:
             raise
 
-        await self._transaction_manager.commit()
+        await self._uow.commit()
 
         log.info("Create user: done. Username: '%s'.", user.username.value)
         return CreateUserCommandResult(id=user.id_.value)

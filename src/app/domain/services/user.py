@@ -7,8 +7,8 @@ from app.domain.exceptions.user import (
 )
 from app.domain.ports.password_hasher import PasswordHasher
 from app.domain.ports.user_id_generator import UserIdGenerator
+from app.domain.value_objects.entity_id import EntityId
 from app.domain.value_objects.raw_password.raw_password import RawPassword
-from app.domain.value_objects.user_id import UserId
 from app.domain.value_objects.user_password_hash import UserPasswordHash
 from app.domain.value_objects.username.username import Username
 
@@ -36,7 +36,7 @@ class UserService:
         if not role.is_assignable:
             raise RoleAssignmentNotPermittedError(role)
 
-        user_id = UserId(self._user_id_generator())
+        user_id = EntityId(self._user_id_generator())
         password_hash = UserPasswordHash(self._password_hasher.hash(raw_password))
         return User(
             id_=user_id,

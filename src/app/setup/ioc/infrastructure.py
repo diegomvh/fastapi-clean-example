@@ -1,8 +1,5 @@
 from dishka import Provider, Scope, provide, provide_all
 
-from app.infrastructure.adapters.main_transaction_manager_sqla import (
-    SqlaMainTransactionManager,
-)
 from app.infrastructure.adapters.user_data_mapper_sqla import (
     SqlaUserDataMapper,
 )
@@ -81,7 +78,6 @@ class InfrastructureProvider(Provider):
         SqlaAuthSessionTransactionManager,
         SqlaUserDataMapper,
         SqlaUserReader,
-        SqlaMainTransactionManager,
     )
 
 

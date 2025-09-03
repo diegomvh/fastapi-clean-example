@@ -1,55 +1,55 @@
-# Arquitectura del Proyecto
+# Project Architecture
 
-## Descripción General
+## Overview
 
-Este proyecto es una aplicación FastAPI que implementa arquitectura limpia (Clean Architecture), separando las preocupaciones en capas para mantener la independencia y testabilidad.
+This project is a FastAPI application that implements Clean Architecture, separating concerns into layers to maintain independence and testability.
 
-## Capas de Arquitectura
+## Architecture Layers
 
-### 1. Capa de Dominio (Domain Layer)
-- **Ubicación**: `src/app/domain/`
-- **Propósito**: Contiene la lógica de negocio central, independiente de frameworks externos.
-- **Directorios**:
-  - `entities/`: Entidades del dominio (ej. User)
-  - `enums/`: Enumeraciones (ej. UserRole)
-  - `exceptions/`: Excepciones específicas del dominio
-  - `ports/`: Interfaces para dependencias externas (ej. PasswordHasher, UserIdGenerator)
-  - `services/`: Servicios de dominio puro
-  - `value_objects/`: Objetos de valor (ej. UserId, Username, RawPassword)
+### 1. Domain Layer
+- **Location**: `src/app/domain/`
+- **Purpose**: Contains core business logic, independent of external frameworks.
+- **Directories**:
+  - `entities/`: Domain entities (e.g. User)
+  - `enums/`: Enumerations (e.g. UserRole)
+  - `exceptions/`: Domain-specific exceptions
+  - `ports/`: Interfaces for external dependencies (e.g. PasswordHasher, UserIdGenerator)
+  - `services/`: Pure domain services
+  - `value_objects/`: Value objects (e.g. UserId, Username, RawPassword)
 
-### 2. Capa de Aplicación (Application Layer)
-- **Ubicación**: `src/app/application/`
-- **Propósito**: Define los casos de uso y orquesta la lógica de aplicación.
-- **Directorios**:
-  - `commands/`: Comandos de aplicación (ej. ActivateUser, ChangePassword, GrantAdmin)
-  - `common/`: Elementos compartidos (excepciones, puertos, modelos de consulta, parámetros de consulta, servicios comunes)
-  - `features/`: Características específicas (meeting, user)
+### 2. Application Layer
+- **Location**: `src/app/application/`
+- **Purpose**: Defines use cases and orchestrates application logic.
+- **Directories**:
+  - `commands/`: Application commands (e.g. ActivateUser, ChangePassword, GrantAdmin)
+  - `common/`: Shared elements (exceptions, ports, query models, query parameters, common services)
+  - `features/`: Specific features (meeting, user)
 
-### 3. Capa de Infraestructura (Infrastructure Layer)
-- **Ubicación**: `src/app/infrastructure/`
-- **Propósito**: Implementa las dependencias externas y adaptadores.
-- **Directorios**:
-  - `adapters/`: Adaptadores concretos (ej. PasswordHasherBcrypt, MainFlusherSqla, MainTransactionManagerSqla)
-  - `auth/`: Autenticación y manejo de sesiones
-  - `diator/`: Contenedor de dependencias
-  - `exceptions/`: Excepciones de infraestructura
-  - `persistence_sqla/`: Persistencia con SQLAlchemy (mappings, config, provider, registry, alembic)
+### 3. Infrastructure Layer
+- **Location**: `src/app/infrastructure/`
+- **Purpose**: Implements external dependencies and adapters.
+- **Directories**:
+  - `adapters/`: Concrete adapters (e.g. PasswordHasherBcrypt, MainFlusherSqla, MainTransactionManagerSqla)
+  - `auth/`: Authentication and session management
+  - `diator/`: Dependency container
+  - `exceptions/`: Infrastructure exceptions
+  - `persistence_sqla/`: SQLAlchemy persistence (mappings, config, provider, registry, alembic)
 
-### 4. Capa de Presentación (Presentation Layer)
-- **Ubicación**: `src/app/presentation/`
-- **Propósito**: Maneja la interfaz de usuario y entrada/salida.
-- **Directorios**:
-  - `http/`: Controladores HTTP, manejadores de autenticación, errores
+### 4. Presentation Layer
+- **Location**: `src/app/presentation/`
+- **Purpose**: Handles user interface and input/output.
+- **Directories**:
+  - `http/`: HTTP controllers, authentication handlers, error handlers
 
-### 5. Configuración y Setup
-- **Ubicación**: `src/app/setup/`
-- **Propósito**: Configura la aplicación y la inyección de dependencias.
-- **Directorios**:
-  - `config/`: Configuraciones (base de datos, logs, seguridad, settings)
-  - `ioc/`: Proveedores de inyección de dependencias para cada capa (application, domain, infrastructure, presentation)
+### 5. Configuration and Setup
+- **Location**: `src/app/setup/`
+- **Purpose**: Configures the application and dependency injection.
+- **Directories**:
+  - `config/`: Configurations (database, logs, security, settings)
+  - `ioc/`: Dependency injection providers for each layer (application, domain, infrastructure, presentation)
 
-### Otros Directorios Relevantes
-- `tests/`: Pruebas unitarias, de integración y rendimiento
-- `config/`: Configuraciones por entorno (dev, local, prod)
-- `docs/`: Documentación y diagramas de arquitectura
-- `scripts/`: Scripts auxiliares (ej. para Dishka, Makefile)
+### Other Relevant Directories
+- `tests/`: Unit, integration and performance tests
+- `config/`: Environment-specific configurations (dev, local, prod)
+- `docs/`: Documentation and architecture diagrams
+- `scripts/`: Auxiliary scripts (e.g. for Dishka, Makefile)

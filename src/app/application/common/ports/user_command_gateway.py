@@ -2,7 +2,7 @@ from abc import abstractmethod
 from typing import Protocol
 
 from app.domain.entities.user import User
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 from app.domain.value_objects.username.username import Username
 
 
@@ -14,7 +14,7 @@ class UserCommandGateway(Protocol):
         """
 
     @abstractmethod
-    async def read_by_id(self, user_id: UserId) -> User | None:
+    async def read_by_id(self, user_id: EntityId) -> User | None:
         """
         :raises DataMapperError:
         """

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 from app.infrastructure.auth.exceptions import AuthenticationError
 from app.infrastructure.auth.session.constants import (
     AUTH_IS_UNAVAILABLE,
@@ -44,7 +44,7 @@ class AuthSessionService:
         self._auth_session_timer = auth_session_timer
         self._cached_auth_session: AuthSession | None = None
 
-    async def issue_session(self, user_id: UserId) -> None:
+    async def issue_session(self, user_id: EntityId) -> None:
         """
         :raises AuthenticationError:
         """
@@ -73,7 +73,7 @@ class AuthSessionService:
             auth_session.id_,
         )
 
-    async def get_authenticated_user_id(self) -> UserId:
+    async def get_authenticated_user_id(self) -> EntityId:
         """
         :raises AuthenticationError:
         """
@@ -137,7 +137,7 @@ class AuthSessionService:
 
         self._cached_auth_session = None
 
-    async def terminate_all_sessions_for_user(self, user_id: UserId) -> None:
+    async def terminate_all_sessions_for_user(self, user_id: EntityId) -> None:
         """
         :raises DataMapperError:
         """

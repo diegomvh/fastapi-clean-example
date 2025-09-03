@@ -1,5 +1,5 @@
 from app.application.common.ports.identity_provider import IdentityProvider
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 from app.infrastructure.auth.session.service import AuthSessionService
 
 
@@ -10,7 +10,7 @@ class AuthSessionIdentityProvider(IdentityProvider):
     ):
         self._auth_session_service = auth_session_service
 
-    async def get_current_user_id(self) -> UserId:
+    async def get_current_user_id(self) -> EntityId:
         """
         :raises AuthenticationError:
         """

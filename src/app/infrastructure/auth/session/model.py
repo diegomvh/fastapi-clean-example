@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 
 
 @dataclass(eq=False, kw_only=True)
@@ -15,5 +15,5 @@ class AuthSession:
     """
 
     id_: str
-    user_id: UserId
+    user_id: EntityId
     expiration: datetime

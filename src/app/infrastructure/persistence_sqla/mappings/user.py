@@ -3,7 +3,7 @@ from sqlalchemy.orm import composite
 
 from app.domain.entities.user import User
 from app.domain.enums.user_role import UserRole
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 from app.domain.value_objects.user_password_hash import UserPasswordHash
 from app.domain.value_objects.username.constants import USERNAME_MAX_LEN
 from app.domain.value_objects.username.username import Username
@@ -30,7 +30,7 @@ def map_users_table() -> None:
         User,
         users_table,
         properties={
-            "id_": composite(UserId, users_table.c.id),
+            "id_": composite(EntityId, users_table.c.id),
             "username": composite(Username, users_table.c.username),
             "password_hash": composite(UserPasswordHash, users_table.c.password_hash),
             "role": users_table.c.role,

@@ -3,9 +3,7 @@ from dishka import Provider, Scope, provide, provide_all
 from app.application.common.ports.access_revoker import AccessRevoker
 from app.application.common.ports.flusher import Flusher
 from app.application.common.ports.identity_provider import IdentityProvider
-from app.application.common.ports.transaction_manager import (
-    TransactionManager,
-)
+from app.application.common.ports.uow import AsyncBaseUnitOfWork
 from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.ports.user_query_gateway import UserQueryGateway
 from app.application.common.services.current_user import CurrentUserService
@@ -23,9 +21,7 @@ from app.application.features.user.commands.revoke_admin import (
 )
 from app.application.features.user.queries.list import ListUsersQueryHandler
 from app.infrastructure.adapters.main_flusher_sqla import SqlaMainFlusher
-from app.infrastructure.adapters.main_transaction_manager_sqla import (
-    SqlaMainTransactionManager,
-)
+from app.infrastructure.adapters.uow import AsyncSQLAlchemyUnitOfWork
 from app.infrastructure.adapters.user_data_mapper_sqla import (
     SqlaUserDataMapper,
 )
@@ -57,9 +53,9 @@ class ApplicationProvider(Provider):
     )
 
     # Ports Persistence
-    tx_manager = provide(
-        source=SqlaMainTransactionManager,
-        provides=TransactionManager,
+    uow = provide(
+        source=AsyncSQLAlchemyUnitOfWork,
+        provides=AsyncBaseUnitOfWork,
     )
     flusher = provide(
         source=SqlaMainFlusher,

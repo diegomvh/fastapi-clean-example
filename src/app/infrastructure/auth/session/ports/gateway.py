@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from app.domain.value_objects.user_id import UserId
+from app.domain.value_objects.entity_id import EntityId
 from app.infrastructure.auth.session.model import AuthSession
 
 
@@ -36,7 +36,7 @@ class AuthSessionGateway(Protocol):
         """
 
     @abstractmethod
-    async def delete_all_for_user(self, user_id: UserId) -> None:
+    async def delete_all_for_user(self, user_id: EntityId) -> None:
         """
         :raises DataMapperError:
         """

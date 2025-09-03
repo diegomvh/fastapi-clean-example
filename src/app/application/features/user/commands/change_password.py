@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from diator.requests import Request, RequestHandler
 
-from app.application.common.ports.transaction_manager import TransactionManager
+from app.application.common.ports.uow import AsyncBaseUnitOfWork
 from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.services.authorization.authorize import authorize
 from app.application.common.services.authorization.composite import AnyOf
@@ -41,13 +41,13 @@ class ChangePasswordCommandHandler(RequestHandler[ChangePasswordCommand, None]):
         current_user_service: CurrentUserService,
         user_command_gateway: UserCommandGateway,
         user_service: UserService,
-        transaction_manager: TransactionManager,
+        uow: AsyncBaseUnitOfWork,
     ):
         super().__init__()
         self._current_user_service = current_user_service
         self._user_command_gateway = user_command_gateway
         self._user_service = user_service
-        self._transaction_manager = transaction_manager
+        self._uow = uow
 
     async def handle(self, request_data: ChangePasswordCommand) -> None:
         """
@@ -82,6 +82,6 @@ class ChangePasswordCommandHandler(RequestHandler[ChangePasswordCommand, None]):
         )
 
         self._user_service.change_password(user, password)
-        await self._transaction_manager.commit()
+        await self._uow.commit()
 
         log.info("Change password: done.")

@@ -4,7 +4,7 @@ from typing import TypedDict
 from uuid import UUID
 
 from app.application.common.ports.flusher import Flusher
-from app.application.common.ports.transaction_manager import TransactionManager
+from app.application.common.ports.uow import AsyncBaseUnitOfWork
 from app.application.common.ports.user_command_gateway import UserCommandGateway
 from app.application.common.services.current_user import CurrentUserService
 from app.domain.exceptions.user import UsernameAlreadyExistsError
@@ -46,13 +46,13 @@ class SignUpHandler:
         user_service: UserService,
         user_command_gateway: UserCommandGateway,
         flusher: Flusher,
-        transaction_manager: TransactionManager,
+        uow: AsyncBaseUnitOfWork,
     ):
         self._current_user_service = current_user_service
         self._user_service = user_service
         self._user_command_gateway = user_command_gateway
         self._flusher = flusher
-        self._transaction_manager = transaction_manager
+        self._uow = uow
 
     async def execute(self, request_data: SignUpRequest) -> SignUpResponse:
         """
@@ -83,7 +83,7 @@ class SignUpHandler:
         except UsernameAlreadyExistsError:
             raise
 
-        await self._transaction_manager.commit()
+        await self._uow.commit()
 
         log.info("Sign up: done. Username: '%s'.", user.username.value)
         return SignUpResponse(id=user.id_.value)
