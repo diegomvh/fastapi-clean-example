@@ -97,7 +97,9 @@ class ListUsersQueryHandler(RequestHandler[ListUsersQuery, ListUsersQueryResult]
         )
 
         user_repository = self._uow.repository(User)
-        all_users = await user_repository.find_all()
+        all_users = await user_repository.all(
+            username="diego",
+        )
         print(all_users)  # noqa: T201
 
         users: list[UserQueryModel] | None = await self._user_query_gateway.read_all(
